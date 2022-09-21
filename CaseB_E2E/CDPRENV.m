@@ -89,33 +89,15 @@ classdef CDPRENV < rl.env.MATLABEnvironment
             this.current_joints = joint_state;
             
 
-            %if this.steps == 1
-            %    this.l0 = joint_state(5:8);
-            %    this.T0 = joint_state(1:4);
-            %end
-
             this.X_des = [this.B(:,this.steps);this.X_init(3);this.B_dot(:,this.steps);this.X_init(6)]; % Desired state for the current timestep
 
             
-
-%             model.m = 0.1; %kg
-%             model.dx = 0.5;
-%             model.dy = 0.5;
-%             model.dz = 0.01;
-%             model1.fail = 0;
-%             m1 = fourPRPR(model,model1);
-%             m1.plot_cables(this.X(1:6),joint_state(5:8))
-%             hold on;
-%             plot(this.B(1,this.steps+1),this.B(2,this.steps+1),'*')
-%             hold off
 
             
             [new_states,this.T0,this.l0,this.kappa,this.mom] = traj_tracking(joint_state,this.X,this.T0,this.l0,this.Ts);
             
             this.X = real(new_states(1:6));
-            %this.kappa = real(kappa); 
-            %this.mom = real(mom);
-            
+
 
             dist_error = norm(this.X_des(1:2) - this.X(1:2)); % Distance between the current and desired position
             this.R1 = this.R1 - dist_error;
@@ -126,11 +108,7 @@ classdef CDPRENV < rl.env.MATLABEnvironment
                 this.R2 = 10;
             end
 
-            
-            %lv_des =  (this.prev_slider-this.current_joints(5:8))/this.Ts; % desired slider velocity by RL
-            %lv_allowable = min(max(lv_des,0.05),-0.05); % slider velocity cannot exceed this value
-
-            %this.R5 = -1*abs(lv_allowable - lv_des); % penalize RL choosing a slider positions that are too far from reasonable values
+           
 
             this.track_error = this.X_des(1:2) - this.X(1:2); % [2x1] vector
             this.velocity_error = this.X_des(4:5)- this.X(4:5); % [2x1] vector
@@ -144,13 +122,8 @@ classdef CDPRENV < rl.env.MATLABEnvironment
             fprintf('T = [%0.2f %0.2f %0.2f %0.2f]\t Ls = [%0.2f %0.2f %0.2f %0.2f]\t X_e = [%0.2f %0.2f]\t distance_error = %0.2f\t X_init = [%0.2f %0.2f]\t X_des = [%0.2f %0.2f]\t Rewards = [%0.2f %0.2f %0.2f %0.2f %0.2f %0.2f] \n' ...
                 ,joint_state(1),joint_state(2),joint_state(3),joint_state(4),joint_state(5),joint_state(6),joint_state(7),joint_state(8),this.X(1),this.X(2),dist_error,this.X_init(1),this.X_init(2),this.X_des(1),this.X_des(2),this.R0,this.R1,this.R2,this.R3,this.R4,this.R5(1))
              
-            % We're charting complete trajectories, no need for termination
-            % condition
 
-            % Terminate if robot out of workspace bounds?
-%             if (sum(this.X(1:2) > 0.7) > 0 || sum(this.X(1:2) < 0.1) > 0) == 1 
-%                 this.Reward = this.Reward - 1000000;
-%             end
+
 
             if this.steps == this.nsteps %(sum(this.X(1:2) > 0.7) > 0 || sum(this.X(1:2) < 0.1) > 0) == 1 
                 IsDone = true;
@@ -212,11 +185,7 @@ classdef CDPRENV < rl.env.MATLABEnvironment
             z = abs(null(Jw));
             this.T0 = z*(0.1/min(z));
 
-            %m1.plot_cables(this.X(1:6),this.l0)
-            %hold on;
-           % plot(this.B(1,:),this.B(2,:),'-')
-            %hold off;
-            
+     
             Observation = [this.X_init;this.track_error;this.velocity_error;this.kappa;this.mom;this.T0;this.l0]; % 25 by 1 vector
 
             InitialObservation = Observation;
@@ -241,14 +210,6 @@ classdef CDPRENV < rl.env.MATLABEnvironment
         % Reward function
         function Reward = getReward(this)
 
-
-            %R0 = tracking error norm
-            %R1 = Integral of tracking error norm
-            %R2 = Monotonic error change
-            %R3 = velocity error norm
-            %R3 = Minimize Cable Tensions
-            %R4 = Maximize Kappa
-            
             sat = max(0.001,norm(this.track_error));
             w1 = 1*((1/sat));
                 %weight = [1000/w1 0 (500/norm(this.track_error)) (5/norm(this.track_error)) 0 0]; 
@@ -263,20 +224,12 @@ classdef CDPRENV < rl.env.MATLABEnvironment
             this.R4 = -1*(cable_tensions - [0.1;0.1;0.1;0.1])'*(cable_tensions - [0.1;0.1;0.1;0.1]); % minimize tension
             this.R5 = -(1-this.kappa); % -(1/kappa -1) to penalize it harder? 
             this.R6 = -(1-this.mom);
-            % kappa tends from 0 to 1 where 1 is favourable and generally
-            % hard to get, and zero is extremely unfavorable.
-            %this.R6 = -abs(this.steps - nstep_des); % penalize taking more steps than required
-
-            %[10000/w1 10 100 100 100 100]; orignal
-
+   
 
             rew = [this.R0;this.R1;this.R2;this.R3;this.R4;this.R5;this.R6];
             
             reward = weight*rew;  
             
-%             if (sum(this.X(1:2) > 0.7) > 0 || sum(this.X(1:2) < 0.1) > 0) == 1 
-%                 reward = reward - 10000000;
-%             end
             
             this.Reward = reward;
             Reward = this.Reward;

@@ -1,17 +1,13 @@
 %% full trajectory learning for trajectory tracking
 %% Description
-% 1. The trajectories are defined as Bezier curves. The dyanmics have FOL.
-% Changed the R6 reward (now R5) to penalize the agent from selection
-% values too far from the previous value
-
-
-%NOISE VARIATION : 8.1*ones(4,1);
+% 1. The trajectories are defined as Bezier curves.
+%
 
 clc
 clear all
 %% Data
 nsteps = 200;
-nepisodes = 500;
+nepisodes = 5000;
 
 inputs.train = true;
 inputs.P0 = [0.2;0.6];
@@ -91,25 +87,15 @@ actor = rlDeterministicActorRepresentation(actorNetwork,observationInfo,actionIn
 agentOptions = rlTD3AgentOptions(...
     'SampleTime',inputs.Ts,...
     'TargetSmoothFactor',1e-3,...
-    'ExperienceBufferLength',50000,...
+    'ExperienceBufferLength',100000,...
     'DiscountFactor',0.99,...
-    'MiniBatchSize',1024);
-
-%SD * sqrt(Ts) = (0.01 to 0.1)*range
-%var = (0.1*range)^2 / Ts
-% agentOptions.NoiseOptions.Variance = 0.016*ones(4,1);
-% agentOptions.NoiseOptions.VarianceDecayRate = 1e-4;
-% agentOptions.ResetExperienceBufferBeforeTraining = true;
+    'MiniBatchSize',2048);
 
 agentOptions.ExplorationModel.VarianceMin = 0.0001;
 agentOptions.ExplorationModel.Variance = 1*([0.02;0.02;0.02;0.02;0.01;0.01;0.01;0.01]).^2;
-%agentOptions.ExplorationModel.Variance = 0.016*ones(4,1);
-%agentOptions.ExplorationModel.Variance = 8.1*ones(4,1);
 agentOptions.ExplorationModel.VarianceDecayRate = 1e-3;
 
 %%
-%agentOptions.ResetExperienceBufferBeforeTraining = false;
-
 
 agent = rlTD3Agent(actor,critic,agentOptions);
 %%
@@ -117,25 +103,21 @@ maxepisodes = nepisodes;
 maxsteps = nsteps;
 trainingOpts = rlTrainingOptions('MaxEpisodes',maxepisodes,'MaxStepsPerEpisode',maxsteps,'Verbose',true,'StopTrainingCriteria','EpisodeCount','StopTrainingValue',maxepisodes,'Plots',"none");
 
-% trainOpts.UseParallel = true;
-% trainOpts.ParallelizationOptions.Mode = 'async';
-% trainOpts.ParallelizationOptions.StepsUntilDataIsSent = 1024;
-% %trainOpts.ParallelizationOptions.DataToSendFromWorkers = 'Experiences';
 
 %%
 trainingStats = train(agent,env,trainingOpts);
 
 %%
 
-save("CDPR_Agent_BezTraj5.mat",'agent')
+save("CDPR_Agent_E2E.mat",'agent')
 
 
 %% Evaluation
-%load('VelocityOscAgentP1.mat')
+
 
 %% Validate Environment
 env=CDPRENV(inputs);
-%rng(0)
+
 inputs.train = false;
 
 inputs.P0 = [0.2;0.5];
@@ -144,10 +126,10 @@ inputs.P2 = [0.7;0.4];
 
 simOpts = rlSimulationOptions('MaxSteps',maxsteps);
 experience = sim(env,agent,simOpts);
-%save('Workspace2.mat')
+
 %%
 X = experience.Observation.ActualEndEffectorPosition_Velocity_PositionError_VelocityError_.Data;
-%X = reshape(X,[301,6]);
+
 X = squeeze(X);
 Act = experience.Action.DesiredCableTensions_DesiredSliderPositions.Data;
 Ac = squeeze(Act);
@@ -206,16 +188,6 @@ for i = 1:1:(size(X,2)-1)
     lgd.FontSize = 10;
     lgd.ItemTokenSize  =[3 1];
 
-%     subplot(4,4,8)
-%     hold on
-%     plot(Ac(5,1:i),'-r')
-%     plot(Ac(6,1:i),'-b')
-%     plot(Ac(7,1:i),'-g')
-%     plot(Ac(8,1:i),'-k')
-%     hold off
-%     title('Slider Positions')
-%     xlabel('Time','Interpreter','latex')
-%     ylabel('Slider Position','Interpreter','latex')
 
     subplot(3,3,6)
     hold on
