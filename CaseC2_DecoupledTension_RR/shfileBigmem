@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+#PBS -N CDW18
+#PBS -q opencav
+#PBS -l select=1:ncpus=40:mem=125gb,walltime=50:00:00
+
+module add matlab/2022a 
+
+cd /scratch1/asalvi/CDPR/CDPR_W/CDPR_W_18/ 
+matlab -nodisplay -nosplash -batch CableRobMain > CDPR_W_18.txt
