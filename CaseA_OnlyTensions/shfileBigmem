@@ -1,0 +1,9 @@
+#!/bin/bash
+#
+#PBS -N CDOT2
+#PBS -l select=1:ncpus=40:mem=125gb,walltime=50:00:00
+
+module add matlab/2022a 
+
+cd /scratch1/asalvi/CDPR/CDPR_W/OT2/ 
+matlab -nodisplay -nosplash -batch CableRobMain > CDPR_W_OT2.txt
