@@ -144,15 +144,7 @@ classdef CDPRENV < rl.env.MATLABEnvironment
 
             this.track_error_prev = this.track_error;
             
-            %Print Values
-            %fprintf('T = [%0.2f %0.2f %0.2f %0.2f]\t Ls = [%0.2f %0.2f %0.2f %0.2f]\t X_e = [%0.2f %0.2f %0.2f]\t distance_error = %0.2f\t X_des = [%0.2f %0.2f %0.2f]\t Rewards = [%0.2f %0.2f %0.2f %0.2f] \n' ...
-            %    ,joint_state(1),joint_state(2),joint_state(3),joint_state(4),this.l0(1),this.l0(2),this.l0(3),this.l0(4),this.X(1),this.X(2),this.X(3),dist_error,this.X_des(1),this.X_des(2),this.X_des(3),this.R0,this.R1,this.R2,this.R3)
-             
-            % We're charting complete trajectories, no need for termination
-            % condition
-
-            % Penalize if robot out of workspace bounds?
-
+  
             if this.steps == this.nsteps
                 IsDone = true;
             else
@@ -230,14 +222,6 @@ classdef CDPRENV < rl.env.MATLABEnvironment
     methods               
         % Reward function
         function Reward = getReward(this)
-
-            %R0 = tracking error norm
-            %R1 = Integral of tracking error norm
-            %R2 = Monotonic error change
-            %R3 = velocity error norm
-            %R3 = Minimize Cable Tensions
-            %R4 = Maximize Kappa
-            
             
             
             weight = [1 1 1 1 1 1].*[this.rew_wt];

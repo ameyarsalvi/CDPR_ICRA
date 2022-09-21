@@ -71,7 +71,7 @@
     
     %%
     
-    actorOptions = rlRepresentationOptions('LearnRate',1e-3,'GradientThreshold',1,'L2RegularizationFactor',1e-3);
+    actorOptions = rlRepresentationOptions('LearnRate',1e-5,'GradientThreshold',1,'L2RegularizationFactor',1e-3);
     actor = rlDeterministicActorRepresentation(actorNetwork,observationInfo,actionInfo,...
         'Observation',{'observation'},'Action',{'ActorScaling1'},actorOptions);
     
@@ -84,20 +84,13 @@
     agentOptions = rlTD3AgentOptions(...
         'SampleTime',inputs.Ts,...
         'TargetSmoothFactor',1e-3,...
-        'ExperienceBufferLength',100000,...
+        'ExperienceBufferLength',50000,...
         'DiscountFactor',0.99,...
         'MiniBatchSize',2048);
     
-    %SD * sqrt(Ts) = (0.01 to 0.1)*range
-    %var = (0.1*range)^2 / Ts
-    % agentOptions.NoiseOptions.Variance = 0.016*ones(4,1);
-    % agentOptions.NoiseOptions.VarianceDecayRate = 1e-4;
-    % agentOptions.ResetExperienceBufferBeforeTraining = true;
     
     agentOptions.ExplorationModel.VarianceMin = 0.0001;
     agentOptions.ExplorationModel.Variance = (0.2)^2*ones(4,1);
-    %agentOptions.ExplorationModel.Variance = 0.016*ones(4,1);
-    %agentOptions.ExplorationModel.Variance = 8.1*ones(4,1);
     agentOptions.ExplorationModel.VarianceDecayRate = 1e-5;
     
     %%
@@ -120,12 +113,9 @@
     
     %%
     
-    %save()
-    %save(append(filename,'/',"CDPR_Agent_cascaded.mat"),'agent')
-    save('workspace.mat')
-    
-    %% Evaluation
-    %load('CDPR_Agent_only_sliders_v2_2.mat')
+
+    save('DecoupledB_Agent.mat','agent')
+   
     
     %% Validate Environment
     inputs.train = false;
@@ -141,7 +131,6 @@
     
     %%
     input = experience.Observation.CurrentEndEffectorPosition_Velocity_Ls01Ls02Ls03Ls04.Data;
-    %X = reshape(X,[301,6]);
     X = squeeze(input);
     Act = experience.Action.DesiredCableTensions.Data;
     Ac = squeeze(Act);
@@ -201,16 +190,6 @@ for i = 1:1:(size(X,2)-1)
     lgd.FontSize = 10;
     lgd.ItemTokenSize  =[3 1];
 
-%     subplot(4,4,8)
-%     hold on
-%     plot(Ac(5,1:i),'-r')
-%     plot(Ac(6,1:i),'-b')
-%     plot(Ac(7,1:i),'-g')
-%     plot(Ac(8,1:i),'-k')
-%     hold off
-%     title('Slider Positions')
-%     xlabel('Time','Interpreter','latex')
-%     ylabel('Slider Position','Interpreter','latex')
 
     subplot(3,3,6)
     hold on
@@ -299,18 +278,7 @@ close(myVideo);
     ylabel('Action')
     legend('T1','T2','T3','T4')
 
-%     f4 = figure('color','w');
-%     hold on
-%     plot(X(1,:))
-%     plot(Ac(2,:))
-%     plot(Ac(3,:))
-%     plot(Ac(4,:))
-%     hold off
-%     title('Desired Tension')
-%     xlabel('Time')
-%     ylabel('Action')
-%     legend('T1','T2','T3','T4')
-%     
+    
     f5 = figure('color','w');
     hold on
     plot(X(7,:))
@@ -323,17 +291,4 @@ close(myVideo);
     ylabel('Action')
     legend('S1','S2','S3','S4')
     
-    % f6 = figure('color','w');
-    % hold on
-    % plot(kappa)
-    % title('Sensitivity')
-    % xlabel('Time')
-    % ylabel('Kappa')
     
-    
-    saveas(f2,append(filename,'/Trajectory.png'))
-    saveas(f3,append(filename,'/Error.png'))
-    saveas(f4,append(filename,'/DesTensions.png'))
-    saveas(f5,append(filename,'/DesSliders.png'))
-%saveas(f6,'kappa.png')
-   %}
