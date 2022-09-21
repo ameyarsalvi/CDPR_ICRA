@@ -1,9 +1,0 @@
-#!/bin/bash
-#
-#PBS -N CDTF
-#PBS -l select=1:ncpus=40:mem=125gb,walltime=50:00:00
-
-module add matlab/2022a 
-
-cd /scratch1/asalvi/CDPR/CDPR_W/TenFin/ 
-matlab -nodisplay -nosplash -batch CableRobMain > CDPR_TenFin.txt

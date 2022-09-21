@@ -4,13 +4,12 @@ clear
 
     %% Data
     nsteps = 200;
-    nepisodes = 1000;
+    nepisodes = 500;
     
     inputs.train = true;
     inputs.P0 = [0.4;0.6];
     inputs.P1 = [0.2;0.4];
     inputs.P2 = [0.6;0.2];
-    %inputs.reward_weights = str2num(reward_weights)
     inputs.reward_weights = [2000 0 0 20 2 0];
     inputs.nsteps = nsteps;
     inputs.Ts = 0.05;
@@ -89,23 +88,16 @@ clear
         'DiscountFactor',0.99,...
         'MiniBatchSize',1024);
     
-    %SD * sqrt(Ts) = (0.01 to 0.1)*range
-    %var = (0.1*range)^2 / Ts
-    % agentOptions.NoiseOptions.Variance = 0.016*ones(4,1);
-    % agentOptions.NoiseOptions.VarianceDecayRate = 1e-4;
-    % agentOptions.ResetExperienceBufferBeforeTraining = true;
+ 
     
     agentOptions.ExplorationModel.VarianceMin = 0.0001;
     agentOptions.ExplorationModel.Variance = 1*(0.2)^2*ones(4,1);
-    %agentOptions.ExplorationModel.Variance = 0.016*ones(4,1);
-    %agentOptions.ExplorationModel.Variance = 8.1*ones(4,1);
     agentOptions.ExplorationModel.VarianceDecayRate = 1e-6;
     
     %%
-    %agentOptions.ResetExperienceBufferBeforeTraining = false;
+
     
-    
-    %agent = rlTD3Agent(actor,critic,agentOptions);
+    agent = rlTD3Agent(actor,critic,agentOptions);
     %%
     maxepisodes = nepisodes;
     maxsteps = nsteps;
@@ -120,20 +112,12 @@ clear
     trainingStats = train(agent,env,trainingOpts);
     
     %%
-    
-    %save()
-    %save(append(filename,'/',"CDPR_Agent_cascaded.mat"),'agent')
-    save('workspaceB.mat')
-    save('agent_all_the_best_partB.mat','agent')
-    %% Evaluation
-    %load('CDPR_Agent_only_sliders_v2_2.mat')
+
+    save('DecoupledA.mat','agent')
     
     %% Validate Environment
     
     inputs.train = true;
-%     inputs.P0 = [0.2;0.6];
-%     inputs.P1 = [0.4;0.3];
-%     inputs.P2 = [0.7;0.4];
 
     inputs.P0 = [0.2;0.6];
     inputs.P1 = [0.4;0.2];
@@ -144,11 +128,9 @@ clear
     
     simOpts = rlSimulationOptions('MaxSteps',nsteps);
     experience = sim(env,agent,simOpts);
-    %save('WorkspaceY.mat')
-    
+
     %%
     input = experience.Observation.CurrentEndEffectorPosition_Velocity_Ls01Ls02Ls03Ls04.Data;
-    %X = reshape(X,[301,6]);
     X = squeeze(input);
     Act = experience.Action.DesiredCableTensions.Data;
     Ac = squeeze(Act);
@@ -210,17 +192,6 @@ for i = 1:1:(size(X,2)-1)
     lgd=legend('$\tau_{1}$','$\tau_{2}$','$\tau_{3}$','$\tau_{4}$','Interpreter','latex');
     lgd.FontSize = 10;
     lgd.ItemTokenSize  =[3 1];
-
-%     subplot(4,4,8)
-%     hold on
-%     plot(Ac(5,1:i),'-r')
-%     plot(Ac(6,1:i),'-b')
-%     plot(Ac(7,1:i),'-g')
-%     plot(Ac(8,1:i),'-k')
-%     hold off
-%     title('Slider Positions')
-%     xlabel('Time','Interpreter','latex')
-%     ylabel('Slider Position','Interpreter','latex')
 
     subplot(3,3,6)
     hold on
@@ -301,18 +272,6 @@ close(myVideo);
     xlabel('Time')
     ylabel('Action')
     legend('T1','T2','T3','T4')
-
-%     f4 = figure('color','w');
-%     hold on
-%     plot(X(1,:))
-%     plot(Ac(2,:))
-%     plot(Ac(3,:))
-%     plot(Ac(4,:))
-%     hold off
-%     title('Desired Tension')
-%     xlabel('Time')
-%     ylabel('Action')
-%     legend('T1','T2','T3','T4')
     
     f5 = figure('color','w');
     hold on
@@ -346,5 +305,3 @@ close(myVideo);
     saveas(f3,append(filename,'/Error.png'))
     saveas(f4,append(filename,'/DesTensions.png'))
     saveas(f5,append(filename,'/DesSliders.png'))
-%saveas(f6,'kappa.png')
-   %}

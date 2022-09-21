@@ -170,8 +170,6 @@ classdef CDPRENV < rl.env.MATLABEnvironment
             phi = pi/4;% + ((-pi/3)*rand(1))+(pi/6);
             this.X = [this.B(:,1);phi;this.B_dot(:,1);0]; % Initial state
             this.X_init = this.X;
-            %des_phi = atan2(this.B_dot(2,2),this.B_dot(1,2));
-            %des_phi_dot = (this.X(3) - des_phi)/this.Ts;
             this.X_des = [this.B(:,2);this.X_init(3);this.B_dot(:,2);0]; % Desired state for the current timestep 
            
             this.track_error = this.X_des(1:2) - this.X_init(1:2);
@@ -212,11 +210,8 @@ classdef CDPRENV < rl.env.MATLABEnvironment
 
             sat = max(0.001,norm(this.track_error));
             w1 = 1*((1/sat));
-                %weight = [1000/w1 0 (500/norm(this.track_error)) (5/norm(this.track_error)) 0 0]; 
                 weight = [2000000 0 0 10000 10 100 100];
 
-            %Deltat = this.vf/norm(this.X_init - this.X_des);
-            %nstep_des = Deltat/this.Ts;
             cable_tensions = this.current_joints(1:4); 
             
             this.R0 = -norm(this.track_error); 
