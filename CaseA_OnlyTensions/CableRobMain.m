@@ -1,17 +1,13 @@
 %% full trajectory learning for trajectory tracking
 %% Description
 % 1. The trajectories are defined as Bezier curves. Only tensions
-% manipulated. No FOL added in the dynamic model
-
-%REWARD DETAILS : Reward has an I controller 
-
-%NOISE VARIATION :
+% manipulated.
 
 clc
 clear all
 %% Data
 nsteps = 200;
-nepisodes = 200;
+nepisodes = 500;
 
 inputs.train = true;
 inputs.P0 = [0.2;0.6];
@@ -87,26 +83,16 @@ actor = rlDeterministicActorRepresentation(actorNetwork,observationInfo,actionIn
 agentOptions = rlTD3AgentOptions(...
     'SampleTime',inputs.Ts,...
     'TargetSmoothFactor',1e-3,...
-    'ExperienceBufferLength',50000,...
+    'ExperienceBufferLength',10000,...
     'DiscountFactor',0.99,...
-    'MiniBatchSize',1024);
-
-%SD * sqrt(Ts) = (0.01 to 0.1)*range
-%var = (0.1*range)^2 / Ts
-% agentOptions.NoiseOptions.Variance = 0.016*ones(4,1);
-% agentOptions.NoiseOptions.VarianceDecayRate = 1e-4;
-% agentOptions.ResetExperienceBufferBeforeTraining = true;
+    'MiniBatchSize',512);
 
 agentOptions.ExplorationModel.VarianceMin = 0.0001;
 agentOptions.ExplorationModel.Variance = (0.2)^2*ones(4,1);
-%agentOptions.ExplorationModel.Variance = 0.016*ones(4,1);
-%agentOptions.ExplorationModel.Variance = 8.1*ones(4,1);
 agentOptions.ExplorationModel.VarianceDecayRate = 1e-3;
 
 %%
-%agentOptions.ResetExperienceBufferBeforeTraining = false;
 
-%agent = rlDDPGAgent(actor,critic,agentOptions);
 agent = rlTD3Agent(actor,critic,agentOptions);
 %%
 maxepisodes = nepisodes;
@@ -123,11 +109,7 @@ trainingStats = train(agent,env,trainingOpts);
 
 %%
 
-save("CDPR_Agent_OnlyT2.mat",'agent')
-
-
-%% Evaluation
-%load('CDPR_Agent_VelCon_FCirc_e2e.mat')
+save("CDPR_Agent_OnlyT.mat",'agent')
 
 %% Validate Environment
 inputs.train = false;
@@ -135,21 +117,14 @@ inputs.train = false;
 inputs.P0 = [0.2;0.5];
 inputs.P1 = [0.4;0.2];
 inputs.P2 = [0.7;0.4];
-% inputs.P0 = [0.2;0.6];
-% inputs.P1 = [0.3;0.5];
-% inputs.P2 = [0.4;0.3];
 
 env=CDPRENV(inputs);
 
-
-
-
 simOpts = rlSimulationOptions('MaxSteps',nsteps);
 experience = sim(env,agent,simOpts);
-%save('Workspace.mat')
+
 %%
 X = experience.Observation.ActualEndEffectorPosition_Velocity_PositionError_VelocityError.Data;
-%X = reshape(X,[301,6]);
 X = squeeze(X);
 Act = experience.Action.DesiredCableTensions.Data;
 Ac = squeeze(Act);
@@ -259,33 +234,6 @@ for i = 1:1:(size(X,2)-1)
     lgd.FontSize = 10;
     lgd.ItemTokenSize  =[3 1];
 
-%     subplot(4,4,8)
-%     hold on
-%     plot(Ac(5,1:i),'-r')
-%     plot(Ac(6,1:i),'-b')
-%     plot(Ac(7,1:i),'-g')
-%     plot(Ac(8,1:i),'-k')
-%     hold off
-%     title('Slider Positions')
-%     xlabel('Time','Interpreter','latex')
-%     ylabel('Slider Position','Interpreter','latex')
-
-%     subplot(3,3,6)
-%     hold on
-%     plot(X(17,1:i),'-r')
-%     plot(X(18,1:i),'-b')
-%     plot(X(19,1:i),'-g')
-%     plot(X(20,1:i),'-k')
-%     hold off
-%     box on
-%     t=title('\textbf{Slider Position}','Interpreter','latex');
-%     t.FontSize = 12;
-%     xlabel('Time [s]','Interpreter','latex')
-%     ylabel('$\mathbf{\l_{s}}$ [m]','Interpreter','latex')
-%     lgd=legend('$\mathbf{\l_{s1}}$','$\mathbf{\l_{s2}}$','$\mathbf{\l_{s3}}$','$\mathbf{\l_{s4}}$','Interpreter','latex');
-%     lgd.FontSize = 10;
-%     lgd.ItemTokenSize  =[3 1];
-
     subplot(3,3,6)
     hold on
     plot(kappa(1:i),'-r')
@@ -307,8 +255,3 @@ end
 
 close(myVideo);
 
-%%
-saveas(f2,'Trajectory.png')
-saveas(f3,'Error.png')
-saveas(f4,'ActionsTheta.png')
-%}
