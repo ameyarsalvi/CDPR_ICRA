@@ -2,7 +2,7 @@
 CDPR Reinforcement Learning Repository for ICRA 2023
 
 
-<img src="https://github.com/ameyarsalvi/CDPR_ICRA/blob/main/ResultsOnlyT.jpg" width="100" height="100">
+<img src="https://github.com/ameyarsalvi/CDPR_ICRA/blob/main/ResultsOnlyT.jpg" width="400" height="400">
 
 ![Alt text](https://github.com/ameyarsalvi/CDPR_ICRA/blob/main/ResultsE2E.jpg "E2E")
 
